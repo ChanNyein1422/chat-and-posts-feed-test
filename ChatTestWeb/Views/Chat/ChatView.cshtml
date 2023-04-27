@@ -1,0 +1,258 @@
+﻿<div id="userlist">
+</div>
+
+<div class="mt-3">
+	<div id="chatlist"></div>
+</div>
+
+
+
+@section scripts{
+	<script>
+		"use strict";
+
+		var connection = new signalR.HubConnectionBuilder().withUrl("https://localhost:7200/chathub").build();
+
+		connection.start().then(function () {
+			console.log("Signal R Connection started")
+		}).catch(function (err) {
+			console.log(err)
+		})
+
+		let sendToUserId = null;
+		let currentUserId = parseInt(localStorage.getItem("userid"));
+		var robotImageUrl = 'https://s3-us-west-2.amazonaws.com/chrisnielsen/robot.png';
+		let lastuserid;
+		let nextuserid;
+		
+		function UserIdentifier(){
+			const getUsername = localStorage.getItem("username");
+			const getUserId = localStorage.getItem("userid");
+			if(getUsername == null || getUserId == null){
+				let username = prompt("Please State Your Identifier");
+				$.ajax({
+					cache: false,
+					url: '@Url.Action("IdentifyUser", "Chat")',
+					data: {username},
+					beforeSend: function(){
+
+					},
+					success: function(response){
+						if(response != null){
+							localStorage.setItem("username", username);
+							localStorage.setItem("userid", response.id);
+							CallUserListPartial();
+						}
+					},
+					error: function(error){
+						console.log(error);
+					}
+				})
+			}else{
+				CallUserListPartial();
+				//return;
+			}
+		}
+
+		$(function(){
+			//local storage settting
+			UserIdentifier();
+			//user list button UI with ajax
+			
+
+			connection.on("SendMessage", function (message, fromUserId, toUserId) {
+				nextuserid = sendToUserId;
+				var currentappid = currentUserId;
+				if (fromUserId === currentUserId) {
+					addToLog(message, true, nextuserid, currentappid, "row");
+				}
+				else if (currentUserId === toUserId) {
+					$('#log div.message:last').find("img").remove()
+					addToLog(message, false, nextuserid, currentappid, "row");
+				}
+			})
+		})
+
+		function CallUserListPartial(){
+			const id = localStorage.getItem("userid");
+			$.ajax({
+				cache: false,
+				url: '@Url.Action("_userlist", "Chat")',
+				data: {id},
+				type: "GET",
+				success: function(response){
+					$("#userlist").empty().append(response);
+					$("button").click(function() {
+						let touserid = parseInt(this.id);
+						sendToUserId = parseInt(this.id);
+						const fromuserid = localStorage.getItem("userid");
+						CallChatListPartial(fromuserid, sendToUserId);
+					});
+				},
+				error: function(error){
+					console.log(error)
+				}
+			})
+		}
+
+		function CallChatListPartial(fromuserid, touserid) {
+			
+			$.ajax({
+				cache: false,
+				url: '@Url.Action("_chatlist", "Chat")',
+				beforeSend: function () {
+
+				},
+				success: function (response) {
+					$("#chatlist").empty().append(response);
+					$.ajax({
+						cache: false,
+						url: '@Url.Action("GetSpecificChatData", "Chat")',
+						data: {fromuserid, touserid},
+						type: "GET",
+						beforeSend: function(){
+
+						},
+						success: function(result){
+							let getUserid = parseInt(localStorage.getItem("userid"));
+							
+							// Cartoon vector designed by Freepik
+							// http://www.freepik.com/free-photos-vectors/cartoon
+							// Pre-load image
+							$('<img/>')[0].src = robotImageUrl;
+							//response.forEach((data) => {
+							//	var nextuserid = data.fromUserId;
+							//	if (data.fromUserId === getUserid) {
+
+							//		addToLog(data.message, true, nextuserid);
+							//	}else{
+							//		addToLog(data.message, false, nextuserid);
+							//	}
+							//	lastuserid = data.fromUserId;
+							//})
+
+							console.log(result);
+
+							for(var j = 0; j < result.length; j++){
+								
+								for(var i = 0; i < result[j].chat.length ; i++){
+								   var response = result[j].chat;
+								   nextuserid = (response[i - 1] != null ? response[i - 1].fromUserId : "");
+								   var currentappid = response[i].fromUserId; 
+								   if (response[i].fromUserId === getUserid) {
+									
+										addToLog(response[i].message, true, nextuserid, currentappid, response[i].accesstime);
+									}else{
+										addToLog(response[i].message, false, nextuserid, currentappid, response[i].accesstime);
+									}
+								}
+
+								var $log = $('.log');
+
+								var $date = $(`<div class="clearfix"></div><div class="row"><div class="col-md-12"><div class="date" style="display: flex;justify-content: center;">${moment(result[j].key).format('MMMM Do YYYY, h:mm:ss a')}</div></div></div>`);
+
+								$log.prepend($date);
+								
+							}
+
+							$("#fromUserId").val(currentUserId);
+							$("#toUserId").val(sendToUserId);
+							
+							$('#messageForm').submit(function (event) {
+								
+								event.preventDefault();
+								//var fromuserid = currentUserId;
+								//var touserid = sendToUserId;
+								//var $userInput = $(this).find('#message');
+								var userinput = document.getElementById("message");
+								
+								$.ajax({
+									cache: false,
+									url: '@Url.Action("InsertChat", "Chat")',
+									type: "POST",
+									data: $(this).serialize(),
+									beforeSend: function () {
+									},
+									success: function (data) {
+										var message = userinput.value;
+										//connection.invoke('SendMessage', message, currentUserId, sendToUserId).catch(function (error) {
+										//	console.log(error);
+										//})
+										//$userInput.val('');
+										userinput.value = ""
+									},
+									complete: function () {
+										
+									},
+									error: function (error) {
+										console.log(error);
+									}
+								})
+							});
+							
+
+							
+						},
+						complete: function(){
+							
+						},
+						error: function(error){
+							console.log(error)
+						}
+					})
+					
+				},
+				error: function (error) {
+					console.log(error);
+				}
+			})
+		}
+
+		function addToLog(message, user, nextuserid, currentappid, opt, accesstime) {
+			var $message = $('<div class="message animated" style="display: flex;"></div>');
+			var $chattime = $('<div class="chattime"></div>');
+			var currentDate = new Date();
+			var convertedDate = new Date(accesstime);
+			if(convertedDate >= currentDate){
+				$chattime.html();
+			}
+			
+			if (!user) {
+				if (currentappid != nextuserid) {
+
+					var $picture = $('<div class="robotImg"><img src="' + robotImageUrl + '"></img><div>');
+					$message.append($picture);
+				}
+				
+			}
+
+			var $content = $('<div class="content"></div>');
+			$content.html(message);
+			$message.append($content);
+
+			var $log = $('.log');
+			if(opt == "row"){
+				$log.append($message);
+
+			}else{
+				$log.prepend($message);
+
+			}
+			
+			if (user) {
+				$message.addClass('user');
+			}
+
+			$log.animate({ scrollTop: $log[0].scrollHeight }, "slow", 'linear');
+
+			setTimeout(function () {
+				if (user) {
+					$message.addClass('user');
+					$message.addClass('fadeInRightBig');
+				} else {
+					$message.addClass('fadeInLeftBig');
+				}
+			}, 0);
+		}
+	</script>
+}

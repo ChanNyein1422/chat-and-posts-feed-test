@@ -1,0 +1,30 @@
+﻿@model Data.ViewModel.CommentMainModel
+
+<p class="fw-bold h5 my-1">Comments : @Model.model.Count()</p>
+    @if(Model.model.Count() > 0){
+        <ul class="list-group" id="comments">
+            @foreach(var data in Model.model)
+            {
+                <li class="list-group-item" id="@data.comment.Id">
+                    <p class="float-left">@data.comment.Comment</p>
+                    <p class="float-end">Commented By: @data.user.username -
+                    @data.comment.AccessTime
+                    </p>
+
+                </li>
+            }
+            
+    </ul>
+}
+else
+{
+    <h5>No Comments Here Yet.</h5>
+}
+<form>
+    <div class="form-group mt-2">
+        <input type="text" class="form-control" id="comment_form_@Model.PostId" aria-describedby="commentHelp" placeholder="Enter comment">
+      
+    </div>
+    <button type="button" class="btn btn-primary mt-1" onclick="add_comment(@Model.PostId)">Add Comment</button>
+</form>
+

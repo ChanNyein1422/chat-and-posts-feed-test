@@ -1,0 +1,35 @@
+﻿@model IEnumerable<Data.ViewModel.UserPostViewModel>
+
+<div class="posts">
+    @if (Model.Count() > 0)
+    {
+        @foreach (var data in Model)
+        {
+            <div class="card mt-3" id="@data.post.Id">
+                <div class="card-header">
+                    @data.post.accessTime
+                </div>
+                <div class="card-body">
+
+                    <h5 class="card-title">@data.post.postContent</h5>
+                    @if (data.post.postPhoto != null)
+                    {
+                        <img src="@data.post.postPhotoUrl" style="width:200px">
+                    }
+                    <p class="card-text">Posted By : @data.user.username</p>
+                    <button class="btn btn-primary" type="button" onclick="load_comment(@data.post.Id)">
+                        Check Comments
+                    </button>
+                </div>
+            </div>
+
+            <div class="ms-3" id="div_post_@data.post.Id" style="width: 80%; display:none"> 
+
+            </div>
+        }
+
+    }
+    else{
+        <h3>No Posts Here Yet.</h3>
+    }
+</div>

@@ -1,0 +1,329 @@
+﻿
+<h2>Posts</h2>
+
+<button type="button" class="btn btn-primary mb-5" data-bs-toggle="modal" data-bs-target="#addPostModal" onclick="load_addform()">
+    + Upload Post (Multipart/Form-Data Image)
+</button>
+<button type="button" class="btn btn-primary mb-5" data-bs-toggle="modal" data-bs-target="#addPostModalBase64" onclick="load_addform2()">
+    + Upload Post (Base64 Image With Compression)
+</button>
+
+<div id="loading">
+    <div class="spinner-border" role="status"></div>
+<span class="sr-only h3 ms-3"> Posts Loading. Please Wait....</span>
+   </div>
+<div id="postlist">
+</div>
+
+<div class="modal fade" id="addPostModal" tabindex="-1" aria-labelledby="addPostModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div id="formholder"></div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="addPostModalBase64" tabindex="-1" aria-labelledby="addPostModalLabelBase64" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div id="formholderBase64"></div>
+        </div>
+
+    </div>
+</div>
+
+@section scripts{
+    <script>
+        "use strict";
+        
+        function UserIdentifier(){
+            const getUsername = localStorage.getItem("username");
+            const getUserId = localStorage.getItem("userid");
+            if (getUsername == null || getUserId == null){
+                let username = prompt("Please Enter Username");
+                $.ajax({
+                    cache: false,
+                    url: '@Url.Action("IdentifyUser", "Chat")',
+                    data: {username},
+                    success: function(response){
+                        if(response != null){
+                            localStorage.setItem("username", username);
+                            localStorage.setItem("userid", response.id);
+                            getPost();
+                      
+                        }
+                 
+                    },
+                    error: function(error){
+                        console.log(error)
+                    }
+                })
+            }else{
+                getPost();
+            }
+        }
+
+        $(function(){
+            UserIdentifier();
+           
+           
+        })
+
+        function getPost(){
+            $.ajax({
+                cache: false,
+                url: "../Post/getallposts",
+                type: "GET",
+                success: function(response){
+                    $("#postlist").empty().append(response);
+                    $("#loading").empty();
+                  
+                },
+                error: function(error){
+                    console.log(error)
+                }
+            })
+        }
+
+        function load_addform(){
+            const userId = localStorage.getItem("userid");
+            form(userId)
+        }
+        function load_addform2(){
+            const userId = localStorage.getItem("userid");
+            popup_modalform(userId, '#addPostModalBase64', '#formholderBase64', "../Post/_addpostbase64", form_submit_base64)
+        }
+
+        function form(userId) {
+            popup_modalform(userId, '#addPostModal',
+                '#formholder', "../Post/_addpost", form_submit);
+        }
+        
+
+        function popup_modalform(userId, modal, formholder, url, callback) {
+            $.ajax({
+                cache: false,
+                url: url,
+                data: { userId : userId },
+                beforeSend: function () {
+                    showmodal(modal)
+                },
+                success: function (result) {
+                    $(formholder).empty().append(result);
+                    callback();
+
+                },
+                complete: function () { }
+            });
+        }
+
+        
+
+        function form_submit() {
+            $('#addForm').submit(function (e) {
+                e.preventDefault();
+                var formData = new FormData();
+                const userId = localStorage.getItem("userid");
+                $("#addForm").find("input[type=file]").each(function(index,field){
+                    const file = field.files;
+                    for(var i = 0; i < file.length; i++){
+                        formData.append("files", file[i]);
+                    }
+                })
+
+
+                var otherModal = {
+                    "Id":0,
+                    "userId": userId,
+                    "postContent": $("#post_content").val(),
+                    "isDeleted" : false
+                }
+
+                for (var key in otherModal) {
+                    formData.append(key, otherModal[key]);
+                }
+                $.ajax({
+                    cache: false,
+                    url: "../Post/InsertPost",
+                    type: "Post",
+                    contentType: false,
+                    processData: false,
+                    data: formData,
+                    dataType: 'json',
+                    beforeSend: function () {
+                        $('.btn').prop("disabled", true);
+                    },
+                    success: function (myData) {
+                      getPost();
+                    },
+                    complete: function () {
+                        hidemodal("#addPostModal");
+                        $('.btn').prop("disabled", false);
+                    }
+                });
+
+            });
+        }
+        function FileOnChange(){
+            //var reader = new FileReader();
+            //reader.readAsDataURL(file);
+            //reader.onload = function () {
+            //    console.log(reader.result);//outputs random looking characters for the image
+            //    // Return the result in the callback
+            //    //cb(reader.result.split(",")[1]);
+            //    $("#postPhoto").val(reader.result);
+            //};
+            //reader.onerror = function (error) {
+            //    console.log('Error: ', error);
+            //};
+
+            $('#upload').change(function () {
+                var input = this;
+                var url = $(this).val();
+                var ext = url.substring(url.lastIndexOf('.') + 1).toLowerCase();
+
+                //const MAX_WIDTH = 800; // Set maximum width of resized image
+                //const MAX_HEIGHT = 800; // Set maximum height of resized image
+                const QUALITY = 0.5;
+
+                const canvas = document.getElementById('canvas');
+                const ctx = canvas.getContext('2d');
+                const imageInput = document.getElementById('upload');
+
+                    const file = this.files[0];
+                    var reader = new FileReader();
+
+                    reader.onload = function (e) {
+                    const img = new Image();
+                    img.addEventListener('load', function () {
+                        let width = img.width;
+                        let height = img.height;
+
+                        // Check if image needs to be resized
+                        //if (width > MAX_WIDTH) {
+                        //    height *= MAX_WIDTH / width;
+                        //    width = MAX_WIDTH;
+                        //}
+                        //if (height > MAX_HEIGHT) {
+                        //    width *= MAX_HEIGHT / height;
+                        //    height = MAX_HEIGHT;
+                        //}
+
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        // Draw image on canvas with resized dimensions
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        
+                        // Get resized image data as a base64 encoded JPEG
+                        //const resizedImage = canvas.toDataURL('image/jpeg');
+                        //console.log(resizedImage);
+                        canvas.toBlob(function (blob) {
+                            console.log(file.name, " ", file.type);
+                            const compressedFile = new File([blob], file.name, { type: file.type });
+                            console.log("Blob : ", blob);
+                            const finalcompressed = canvas.toDataURL('image/jpeg', 50/100);
+                            console.log(finalcompressed);
+                            $("#postPhoto").val(finalcompressed.split(",")[1]);
+                        }, file.type, QUALITY);
+                       
+                        //$("#postPhoto").val(resizedImage.split(",")[1]);
+                    });
+                   img.src = this.result;
+               //     $("#postPhoto").val(e.target.result.split(",")[1]);
+                 
+                    }
+                    reader.readAsDataURL(file);
+
+            });
+        }
+
+
+
+        function form_submit_base64() {
+            FileOnChange();
+            $('#addFormBase64').submit(function (e) {
+                e.preventDefault();
+       
+                const userId = localStorage.getItem("userid");
+    
+                $.ajax({
+                    cache: false,
+                    url: "../Post/InsertPostBase64",
+                    type: "Post",
+                    data: $(this).serialize(),
+                    beforeSend: function () {
+                        $('.btn').prop("disabled", true);
+                    },
+                    success: function (myData) {
+                        getPost();
+                    },
+                    complete: function () {
+                        hidemodal("#addPostModalBase64");
+                        $('.btn').prop("disabled", false);
+                    }
+                });
+
+            });
+        }
+
+        function showmodal(div) {
+            $(div).modal('show');
+        }
+
+        function hidemodal(div) {
+            $(div).modal('hide');
+        }
+        //comment section
+
+        function load_comment(postId) {
+            $.ajax({
+                cache: false,
+                url: "../Post/GetCommentByPost",
+                data: { postId: postId },
+                type: "GET",
+                beforeSend: function () {
+
+                },
+                success: function(response) {
+                    $('#div_post_' + postId).toggle();
+
+                    $('#div_post_' + postId).empty().append(response);
+                },
+                 complete: function () {
+
+                }
+            });
+        }
+
+        function add_comment(postId){
+            console.log(postId);
+            const commenterId = localStorage.getItem("userid");
+            var obj = {
+                "Id":0,
+                "PostId" : postId,
+                "CommenterId" : commenterId,
+                "Comment": $('#comment_form_' + postId).val(),
+                "IsDeleted" : false
+            };
+            $.ajax({
+                cache: false,
+                url: "../Post/AddComment",
+                type: "Post",
+                data: {comment: obj},
+                beforeSend: function(){
+
+                },
+                success: function(){
+                  load_comment(postId);
+                }
+            });
+        }
+        // Post Photos
+
+        
+
+    </script>
+}

@@ -1,0 +1,28 @@
+﻿@model Data.Models.tbPost
+
+<!-- Modal -->
+
+<div class="modal-header">
+    <h5 class="modal-title" id="addPostModalLabel">Add New Post (using multipart)</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+</div>
+ @using (Html.BeginForm("InsertPost", "Post", FormMethod.Post, new { @id="addForm", @enctype= "multipart/form-data"}))
+    {
+    <input type="hidden" name="ID" value="@Model.Id" />
+    <input type="hidden" name="userId" value="@Model.userId" />
+    <div class="modal-body">
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" id="post_content" placeholder="Insert ur post..." name="PostContent" value="@Model.postContent" aria-label="PostContent" aria-describedby="basic-addon1">
+        </div>
+        <div class="input-group mb-3">
+            <input type="file" class="form-control" name="PostPhoto" value="@Model.postPhoto" aria-label="PostPhoto" aria-describedby="basic-addon1">
+        </div>
+    </div>
+
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+    </div>
+    }
+   
+

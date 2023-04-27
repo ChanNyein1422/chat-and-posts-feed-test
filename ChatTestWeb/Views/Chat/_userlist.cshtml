@@ -1,0 +1,16 @@
+﻿@model IEnumerable<Data.Models.tbUser>
+
+<style>
+	.users{
+		position: relative;
+		display: flex;
+	}
+</style>
+
+<div class="users">
+	@foreach(var user in Model){
+		<div>
+			<button type="button" class="btn btn-info" style="margin-left: 10px;" id="@user.id">@user.username</button>
+		</div>
+	}
+</div>

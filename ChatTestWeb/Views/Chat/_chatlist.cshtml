@@ -1,0 +1,106 @@
+﻿@model Data.Models.tbChat
+
+<style>
+    * {
+        font-family: 'Raleway', sans-serif;
+    }
+
+    html, body {
+        height: 100%;
+    }
+
+    .chat-log {
+        position: relative;
+        align-content: center;
+        align-items: center;
+        width: 100%;
+        max-width: 600px;
+        height: 90%;
+        border: 1px solid #f7f7f7;
+    }
+
+    .log {
+        height: calc(100% - 50px);
+        overflow-y: auto;
+    }
+
+    .input {
+        background-color: #F7F7F7;
+        height: 50px;
+    }
+
+    .user-input {
+        color: #B4B7BF;
+        background-color: transparent;
+        width: calc(100% - 90px);
+        border: 0px;
+        font-size: 1.1em;
+        line-height: 50px;
+        margin-left: 20px;
+        outline: none;
+    }
+
+    button {
+        color: #B4B7BF;
+        background-color: transparent;
+        border: 0px;
+        width: 60px;
+        padding: 14px;
+        outline: none;
+        display: inline-block;
+        cursor: pointer;
+    }
+
+    .message {
+        margin: 20px;
+        font-size: 1em;
+        opacity: 1;
+        float: left;
+        clear: both;
+    }
+
+        .message.user {
+            float: right;
+            clear: both;
+        }
+
+        .message img {
+            width: 50px;
+            float: left;
+        }
+
+    .content {
+        background: #8DABE3;
+        color: #ffffff;
+        padding: 15px;
+        border-radius: 5px;
+        float: left;
+        margin-left: 15px;
+    }
+
+    .user .content {
+        color: #868995;
+        background: #f7f7f7;
+        max-width: none;
+    }
+
+
+    .credit {
+        margin-top: 20px;
+    }
+</style>
+
+<div class="chat-log">
+    <div class="log" id="log">
+    </div>
+    <div class="input">
+        <form id="messageForm">
+            <input type="hidden" name="fromUserId" asp-for="fromUserId" id="fromUserId" />
+            <input type="hidden" name="toUserId" asp-for="toUserId" id="toUserId" />
+            <input type="text" class="user-input" placeholder="message..." asp-for="message" name="message" id="message" />
+            <button>
+                <i class="fa fa-paper-plane fa-2x" aria-hidden="true"></i>
+            </button>
+        </form>
+    </div>
+</div>
