@@ -33,6 +33,7 @@ namespace ChatTestWeb.Controllers
         {
 
             var postdata = await PostRequestHelper.GetAllPosts();
+            
             if (postdata == null)
             {
                 return NotFound();
@@ -90,7 +91,6 @@ namespace ChatTestWeb.Controllers
             post.accessTime = DateTime.Now;
             if (post.postPhoto != null)
             {
-
                 var ext = GetFileExtension(post.postPhoto);
 
                 string imageName = Guid.NewGuid() + "." + ext;
@@ -106,6 +106,7 @@ namespace ChatTestWeb.Controllers
             }
 
             var postdata = await PostRequestHelper.UpSert(post);
+
             return Ok(postdata);
         }
         public async Task<IActionResult> GetCommentByPost(int postId)

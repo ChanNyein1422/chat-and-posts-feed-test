@@ -8,7 +8,7 @@
     + Upload Post (Base64 Image With Compression)
 </button>
 
-<div id="loading">
+<div id="loading mt-5">
     <div class="spinner-border" role="status"></div>
 <span class="sr-only h3 ms-3"> Posts Loading. Please Wait....</span>
    </div>
@@ -299,7 +299,6 @@
         }
 
         function add_comment(postId){
-            console.log(postId);
             const commenterId = localStorage.getItem("userid");
             var obj = {
                 "Id":0,
